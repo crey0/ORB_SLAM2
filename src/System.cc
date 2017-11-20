@@ -292,6 +292,11 @@ bool System::MapChanged()
         return false;
 }
 
+Map* System::GetMap()
+{
+    return mpMap;
+}
+
 void System::Reset()
 {
     unique_lock<mutex> lock(mMutexReset);

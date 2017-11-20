@@ -86,6 +86,8 @@ public:
     // since last call to this function
     bool MapChanged();
 
+    Map* GetMap();
+
     // Reset the system (clear map)
     void Reset();
 
