@@ -149,7 +149,7 @@ void Viewer::Run()
             bLocalizationMode = false;
             bFollow = true;
             menuFollowCamera = true;
-            mpSystem->Reset();
+            mpSystem->AskReset();
             menuReset = false;
         }
 

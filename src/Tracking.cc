@@ -474,7 +474,7 @@ void Tracking::Track()
             if(mpMap->KeyFramesInMap()<=5)
             {
                 cout << "Track lost soon after initialisation, reseting..." << endl;
-                mpSystem->Reset();
+                mpSystem->AskReset();
                 return;
             }
         }
@@ -691,8 +691,8 @@ void Tracking::CreateInitialMapMonocular()
 
     if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
     {
-        cout << "Wrong initialization, reseting..." << endl;
-        Reset();
+        cout << "Wrong initialization, resetting..." << endl;
+        mpSystem->Reset();
         return;
     }
 
@@ -1503,35 +1503,6 @@ bool Tracking::Relocalization()
 
 void Tracking::Reset()
 {
-
-    cout << "System Reseting" << endl;
-    if(mpViewer)
-    {
-        mpViewer->RequestStop();
-        while(!mpViewer->isStopped())
-            usleep(3000);
-    }
-
-    // Reset Local Mapping
-    cout << "Reseting Local Mapper...";
-    mpLocalMapper->RequestReset();
-    cout << " done" << endl;
-
-    // Reset Loop Closing
-    cout << "Reseting Loop Closing...";
-    mpLoopClosing->RequestReset();
-    cout << " done" << endl;
-
-    // Clear BoW Database
-    cout << "Reseting Database...";
-    mpKeyFrameDB->clear();
-    cout << " done" << endl;
-
-    // Clear Map (this erase MapPoints and KeyFrames)
-    mpMap->clear();
-
-    KeyFrame::nNextId = 0;
-    Frame::nNextId = 0;
     mState = NO_IMAGES_YET;
 
     if(mpInitializer)
@@ -1545,8 +1516,6 @@ void Tracking::Reset()
     mlFrameTimes.clear();
     mlbLost.clear();
 
-    if(mpViewer)
-        mpViewer->Release();
 }
 
 void Tracking::ChangeCalibration(const string &strSettingPath)

@@ -89,6 +89,7 @@ public:
     Map* GetMap();
 
     // Reset the system (clear map)
+    void AskReset();
     void Reset();
 
     // All threads will be requested to finish.

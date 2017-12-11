@@ -162,7 +162,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     unique_lock<mutex> lock(mMutexReset);
     if(mbReset)
     {
-        mpTracker->Reset();
+        Reset();
         mbReset = false;
     }
     }
@@ -213,7 +213,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     unique_lock<mutex> lock(mMutexReset);
     if(mbReset)
     {
-        mpTracker->Reset();
+        Reset();
         mbReset = false;
     }
     }
@@ -264,7 +264,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     unique_lock<mutex> lock(mMutexReset);
     if(mbReset)
     {
-        mpTracker->Reset();
+        Reset();
         mbReset = false;
     }
     }
@@ -309,10 +309,48 @@ Map* System::GetMap()
     return mpMap;
 }
 
-void System::Reset()
+void System::AskReset()
 {
     unique_lock<mutex> lock(mMutexReset);
     mbReset = true;
+}
+
+void System::Reset()
+{
+    cout << "System Reseting" << endl;
+    if(mpViewer)
+    {
+        mpViewer->RequestStop();
+        while(!mpViewer->isStopped())
+            usleep(3000);
+    }
+
+    // Reset Local Mapping
+    cout << "Reseting Local Mapper...";
+    mpLocalMapper->RequestReset();
+    cout << " done" << endl;
+
+    // Reset Loop Closing
+    cout << "Reseting Loop Closing...";
+    mpLoopCloser->RequestReset();
+    cout << " done" << endl;
+
+    // Clear BoW Database
+    cout << "Reseting Database...";
+    mpKeyFrameDatabase->clear();
+    cout << " done" << endl;
+
+    // Clear Map (this erase MapPoints and KeyFrames)
+    mpMap->clear();
+
+    //Reset F/KF ids
+    KeyFrame::nNextId = 0;
+    Frame::nNextId = 0;
+
+    mpTracker->Reset();
+
+    if(mpViewer)
+        mpViewer->Release();
 }
 
 void System::Shutdown()

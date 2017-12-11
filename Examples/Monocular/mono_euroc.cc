@@ -41,6 +41,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    cout << "Loading images list ..." << endl;
     // Retrieve paths to images
     vector<string> vstrImageFilenames;
     vector<double> vTimestamps;
@@ -50,10 +51,11 @@ int main(int argc, char **argv)
 
     if(nImages<=0)
     {
-        cerr << "ERROR: Failed to load images" << endl;
+        cerr << "ERROR: Failed to load images list" << endl;
         return 1;
     }
 
+    cout << "Building SLAM System ..." << endl;
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
 
