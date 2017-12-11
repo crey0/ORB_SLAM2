@@ -126,6 +126,10 @@ public:
     std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
 
 private:
+    void CheckState();
+    void UpdateTrackingState(const cv::Mat& Tcw);
+
+private:
 
     // Input sensor
     eSensor mSensor;
