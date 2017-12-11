@@ -28,7 +28,7 @@
 #include "KeyFrameDatabase.h"
 
 #include <mutex>
-
+#include <condition_variable>
 
 namespace ORB_SLAM2
 {
@@ -91,7 +91,7 @@ protected:
     bool mbResetRequested;
     std::mutex mMutexReset;
 
-    bool CheckFinish();
+    bool CheckFinishRequested();
     void SetFinish();
     bool mbFinishRequested;
     bool mbFinished;
@@ -104,10 +104,12 @@ protected:
     std::list<KeyFrame*> mlNewKeyFrames;
 
     KeyFrame* mpCurrentKeyFrame;
+    std::mutex mMutexNewKFs;
+    std::condition_variable mCvNewKFs;
 
     std::list<MapPoint*> mlpRecentAddedMapPoints;
 
-    std::mutex mMutexNewKFs;
+
 
     bool mbAbortBA;
 
@@ -118,6 +120,9 @@ protected:
 
     bool mbAcceptKeyFrames;
     std::mutex mMutexAccept;
+
+private:
+    void GetNewKeyFrame();
 };
 
 } //namespace ORB_SLAM
