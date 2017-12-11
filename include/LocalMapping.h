@@ -44,8 +44,6 @@ public:
 
     void SetLoopCloser(LoopClosing* pLoopCloser);
 
-    void SetTracker(Tracking* pTracker);
-
     // Main function
     void Run();
 
@@ -102,7 +100,6 @@ protected:
     Map* mpMap;
 
     LoopClosing* mpLoopCloser;
-    Tracking* mpTracker;
 
     std::list<KeyFrame*> mlNewKeyFrames;
 
