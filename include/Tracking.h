@@ -208,6 +208,8 @@ protected:
     bool mbRGB;
 
     list<MapPoint*> mlpTemporalPoints;
+private:
+    void ColorConvert(cv::Mat &img);
 };
 
 } //namespace ORB_SLAM
