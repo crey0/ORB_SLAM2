@@ -38,8 +38,9 @@ bool has_suffix(const std::string &str, const std::string &suffix) {
 }
 
 System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
-        mbDeactivateLocalizationMode(false)
+               const bool bUseViewer)
+    : mSensor(sensor), mpViewer(nullptr), mbReset(false), mbActivateLocalizationMode(false),
+      mbDeactivateLocalizationMode(false)
 {
     // Output welcome message
     cout << endl <<
@@ -89,10 +90,6 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Create the Map
     mpMap = new Map();
 
-    //Create Drawers. These are used by the Viewer
-    mpFrameDrawer = new FrameDrawer(mpMap);
-    mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
-
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     mpTracker = new Tracking(this, mpVocabulary, mpMap, mpKeyFrameDatabase,
@@ -109,6 +106,11 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Initialize the Viewer thread and launch
     if(bUseViewer)
     {
+        //Create Drawers. These are used by the Viewer
+        mpFrameDrawer = new FrameDrawer(mpMap);
+        mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
+
+        //Crate the viewer and start viewer thread
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
         mptViewer = new thread(&Viewer::Run, mpViewer);
     }
@@ -222,9 +224,13 @@ void System::UpdateTrackingState(const cv::Mat& Tcw)
     }
 
     //Update frame drawer and current camera pose in map drawer
-    mpFrameDrawer->Update(mpTracker);
-    mpMapDrawer->SetCurrentCameraPose(Tcw);
+    if(mpViewer)
+    {
+        mpFrameDrawer->Update(mpTracker);
+        mpMapDrawer->SetCurrentCameraPose(Tcw);
+    }
 }
+
 void System::ActivateLocalizationMode()
 {
     unique_lock<mutex> lock(mMutexMode);
