@@ -197,7 +197,7 @@ void System::CheckState()
         if(mbDeactivateLocalizationMode)
         {
             mpTracker->InformOnlyTracking(false);
-            mpLocalMapper->Release();
+            mpLocalMapper->RequestRelease();
             mbDeactivateLocalizationMode = false;
         }
     }
@@ -277,19 +277,19 @@ void System::Reset()
     }
 
     // Reset Local Mapping
-    cout << "Reseting Local Mapper...";
+    cout << "Reseting Local Mapper...\n";
     mpLocalMapper->RequestReset();
-    cout << " done" << endl;
+    cout << "Reseting Local Mapper: DONE\n";
 
     // Reset Loop Closing
-    cout << "Reseting Loop Closing...";
+    cout << "Reseting Loop Closing...\n";
     mpLoopCloser->RequestReset();
-    cout << " done" << endl;
+    cout << "Reseting Loop Closing: DONE\n";
 
     // Clear BoW Database
-    cout << "Reseting Database...";
+    cout << "Reseting Database...\n";
     mpKeyFrameDatabase->clear();
-    cout << " done" << endl;
+    cout << "Reseting Database: DONE\n";
 
     // Clear Map (this erase MapPoints and KeyFrames)
     mpMap->clear();

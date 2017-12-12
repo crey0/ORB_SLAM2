@@ -579,7 +579,7 @@ void LoopClosing::CorrectLoop()
     mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->mnId);
 
     // Loop closed. Release Local Mapping.
-    mpLocalMapper->Release();    
+    mpLocalMapper->RequestRelease();
 
     mLastLoopKFid = mpCurrentKF->mnId;   
 }
@@ -738,7 +738,7 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
 
             mpMap->InformNewBigChange();
 
-            mpLocalMapper->Release();
+            mpLocalMapper->RequestRelease();
 
             cout << "Map updated!" << endl;
         }

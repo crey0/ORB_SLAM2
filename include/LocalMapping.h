@@ -29,6 +29,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 namespace ORB_SLAM2
 {
@@ -49,29 +50,40 @@ public:
 
     void InsertKeyFrame(KeyFrame* pKF);
 
-    // Thread Synch
+    // Thread state manipulation signals
     void RequestStop();
-    void RequestReset();
-    bool Stop();
-    void Release();
-    bool isStopped();
-    bool stopRequested();
-    bool AcceptKeyFrames();
-    void SetAcceptKeyFrames(bool flag);
-    bool SetNotStop(bool flag);
-
-    void InterruptBA();
-
+    void RequestRelease();
     void RequestFinish();
+
+    //Specific signals
+    void RequestReset();
+    void RequestInterruptBA();
+    bool NotifyNewKeyFrame(); // fails if state is not RUNNING
+
+    //Check current Thread state
+    bool isStopped();
     bool isFinished();
+    bool isRunning();
+    bool isIdle(); //waiting on condition variable
+    bool isStopRequested(); //true if stopped or stop requested
 
     int KeyframesInQueue(){
-        unique_lock<std::mutex> lock(mMutexNewKFs);
+        lock_guard<std::mutex> lock(mMutexNewKFs);
         return mlNewKeyFrames.size();
     }
 
-protected:
+private:
+    enum class LocalMappingState
+    {
+        RUNNING,
+        STOPPED,
+        FINISHED,
+    };
 
+    void ResetIfRequested();
+    LocalMappingState UpdateState();
+
+    bool GetNewKeyFrame();
     bool CheckNewKeyFrames();
     void ProcessNewKeyFrame();
     void CreateNewMapPoints();
@@ -85,44 +97,33 @@ protected:
 
     cv::Mat SkewSymmetricMatrix(const cv::Mat &v);
 
+private:
+    Map* mpMap;
+    LoopClosing* mpLoopCloser;
     bool mbMonocular;
 
-    void ResetIfRequested();
-    bool mbResetRequested;
-    std::mutex mMutexReset;
+    std::atomic<LocalMappingState> mState;
+    std::atomic_bool mbIdle; //if true then LocalMapping thread probably waiting on CV
 
-    bool CheckFinishRequested();
-    void SetFinish();
-    bool mbFinishRequested;
-    bool mbFinished;
-    std::mutex mMutexFinish;
+    //state signals
+    std::atomic_bool mbFinishRequested;
+    std::atomic_int mNStopRequested; //counts stop-release
 
-    Map* mpMap;
-
-    LoopClosing* mpLoopCloser;
+    //other signals
+    std::atomic_bool mbResetRequested;
+    bool mbAbortBA; //TODO clean this (cf LoopClossing and g2o)
+    bool mbNotifyNewKF;
 
     std::list<KeyFrame*> mlNewKeyFrames;
-
-    KeyFrame* mpCurrentKeyFrame;
     std::mutex mMutexNewKFs;
     std::condition_variable mCvNewKFs;
+
+    KeyFrame* mpCurrentKeyFrame;
 
     std::list<MapPoint*> mlpRecentAddedMapPoints;
 
 
 
-    bool mbAbortBA;
-
-    bool mbStopped;
-    bool mbStopRequested;
-    bool mbNotStop;
-    std::mutex mMutexStop;
-
-    bool mbAcceptKeyFrames;
-    std::mutex mMutexAccept;
-
-private:
-    void GetNewKeyFrame();
 };
 
 } //namespace ORB_SLAM

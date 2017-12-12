@@ -937,7 +937,7 @@ bool Tracking::NeedNewKeyFrame()
         return false;
 
     // If Local Mapping is freezed by a Loop Closure do not insert keyframes
-    if(mpLocalMapper->isStopped() || mpLocalMapper->stopRequested())
+    if(mpLocalMapper->isStopped() || mpLocalMapper->isStopRequested())
         return false;
 
     const int nKFs = mpMap->KeyFramesInMap();
@@ -951,9 +951,6 @@ bool Tracking::NeedNewKeyFrame()
     if(nKFs<=2)
         nMinObs=2;
     int nRefMatches = mpReferenceKF->TrackedMapPoints(nMinObs);
-
-    // Local Mapping accept keyframes?
-    bool bLocalMappingIdle = mpLocalMapper->AcceptKeyFrames();
 
     // Check how many "close" points are being tracked and how many could be potentially created.
     int nNonTrackedClose = 0;
@@ -985,41 +982,35 @@ bool Tracking::NeedNewKeyFrame()
     // Condition 1a: More than "MaxFrames" have passed from last keyframe insertion
     const bool c1a = mCurrentFrame.mnId>=mnLastKeyFrameId+mMaxFrames;
     // Condition 1b: More than "MinFrames" have passed and Local Mapping is idle
-    const bool c1b = (mCurrentFrame.mnId>=mnLastKeyFrameId+mMinFrames && bLocalMappingIdle);
+    bool bLocalMappingIdle = mpLocalMapper->isIdle();
+    const bool c1b = mCurrentFrame.mnId>=mnLastKeyFrameId+mMinFrames && bLocalMappingIdle;
     //Condition 1c: tracking is weak
     const bool c1c =  mSensor!=System::MONOCULAR && (mnMatchesInliers<nRefMatches*0.25 || bNeedToInsertClose) ;
     // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
     const bool c2 = ((mnMatchesInliers<nRefMatches*thRefRatio|| bNeedToInsertClose) && mnMatchesInliers>15);
 
-    if((c1a||c1b||c1c)&&c2)
+    if((c1a || c1b ||c1c) && c2)
     {
-        // If the mapping accepts keyframes, insert keyframe.
-        // Otherwise send a signal to interrupt BA
         if(bLocalMappingIdle)
+            return true;
+
+        mpLocalMapper->RequestInterruptBA();
+        if(mSensor!=System::MONOCULAR && mpLocalMapper->KeyframesInQueue() < 3)
         {
+
             return true;
         }
-        else
-        {
-            mpLocalMapper->InterruptBA();
-            if(mSensor!=System::MONOCULAR)
-            {
-                if(mpLocalMapper->KeyframesInQueue()<3)
-                    return true;
-                else
-                    return false;
-            }
-            else
-                return false;
-        }
     }
-    else
-        return false;
+
+    return false;
 }
 
 void Tracking::CreateNewKeyFrame()
 {
-    if(!mpLocalMapper->SetNotStop(true))
+    //TODO Replace "set not stop" mechanics
+    //Essentially it was probably set in place to avoid running concurrently with
+    //the update par of BA
+    if(!mpLocalMapper->NotifyNewKeyFrame())
         return;
 
     KeyFrame* pKF = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
@@ -1089,12 +1080,11 @@ void Tracking::CreateNewKeyFrame()
         }
     }
 
-    mpLocalMapper->InsertKeyFrame(pKF);
-
-    mpLocalMapper->SetNotStop(false);
-
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
+
+    mpLocalMapper->InsertKeyFrame(pKF);
+
 }
 
 void Tracking::SearchLocalPoints()
