@@ -31,6 +31,9 @@
 
 #include <thread>
 #include <mutex>
+#include <condition_variable>
+#include <atomic>
+
 #include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
 
 namespace ORB_SLAM2
@@ -62,29 +65,34 @@ public:
 
     void InsertKeyFrame(KeyFrame *pKF);
 
+    void RequestFinish();
     void RequestReset();
+
+    bool isFinished();
+
 
     // This function will run in a separate thread
     void RunGlobalBundleAdjustment(unsigned long nLoopKF);
 
     bool isRunningGBA(){
-        unique_lock<std::mutex> lock(mMutexGBA);
+        lock_guard<std::mutex> lock(mMutexGBA);
         return mbRunningGBA;
     }
     bool isFinishedGBA(){
-        unique_lock<std::mutex> lock(mMutexGBA);
+        lock_guard<std::mutex> lock(mMutexGBA);
         return mbFinishedGBA;
-    }   
-
-    void RequestFinish();
-
-    bool isFinished();
+    }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-protected:
+private:
 
-    bool CheckNewKeyFrames();
+    enum class LoopClosingState
+    {
+        RUNNING,
+        FINISHED,
+    };
+
 
     bool DetectLoop();
 
@@ -94,15 +102,18 @@ protected:
 
     void CorrectLoop();
 
-    void ResetIfRequested();
-    bool mbResetRequested;
-    std::mutex mMutexReset;
+    bool GetNewKeyFrame(); //Blocking
+    bool CheckNewKeyFrames();
 
-    bool CheckFinish();
-    void SetFinish();
+    LoopClosingState UpdateState();
+    void ResetIfRequested();
+
+
     bool mbFinishRequested;
-    bool mbFinished;
-    std::mutex mMutexFinish;
+    std::atomic_bool mbResetRequested;
+    std::atomic<LoopClosingState> mState;
+    std::mutex mMutexLoopQueue;
+    std::condition_variable mCvMutexLoopQueue;
 
     Map* mpMap;
     Tracking* mpTracker;
@@ -114,7 +125,6 @@ protected:
 
     std::list<KeyFrame*> mlpLoopKeyFrameQueue;
 
-    std::mutex mMutexLoopQueue;
 
     // Loop detector parameters
     float mnCovisibilityConsistencyTh;
@@ -143,7 +153,7 @@ protected:
     bool mbFixScale;
 
 
-    bool mnFullBAIdx;
+    int mnFullBAIdx;
 };
 
 } //namespace ORB_SLAM
