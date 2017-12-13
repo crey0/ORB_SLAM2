@@ -153,11 +153,6 @@ void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
     mpLocalMapper=pLocalMapper;
 }
 
-void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
-{
-    mpLoopClosing=pLoopClosing;
-}
-
 void Tracking::ColorConvert(cv::Mat& img)
 {
     if(mImGray.channels()==3)

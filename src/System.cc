@@ -111,17 +111,13 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
         mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
 
         //Crate the viewer and start viewer thread
-        mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
+        mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,strSettingsFile);
         mptViewer = new thread(&Viewer::Run, mpViewer);
     }
 
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
-    mpTracker->SetLoopClosing(mpLoopCloser);
-
     mpLocalMapper->SetLoopCloser(mpLoopCloser);
-
-    mpLoopCloser->SetTracker(mpTracker);
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
 }
 

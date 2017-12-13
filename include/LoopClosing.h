@@ -56,8 +56,6 @@ public:
 
     LoopClosing(Map* pMap, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,const bool bFixScale);
 
-    void SetTracker(Tracking* pTracker);
-
     void SetLocalMapper(LocalMapping* pLocalMapper);
 
     // Main function
@@ -116,7 +114,6 @@ private:
     std::condition_variable mCvMutexLoopQueue;
 
     Map* mpMap;
-    Tracking* mpTracker;
 
     KeyFrameDatabase* mpKeyFrameDB;
     ORBVocabulary* mpORBVocabulary;
