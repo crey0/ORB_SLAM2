@@ -447,7 +447,7 @@ void LoopClosing::CorrectLoop()
     CorrectedSim3[mpCurrentKF]=mg2oScw;
     cv::Mat Twc = mpCurrentKF->GetPoseInverse();
 
-
+    map<KeyFrame*, set<KeyFrame*> > LoopConnections;
     {
         // Get Map Mutex
         lock_guard<mutex> lock(mpMap->mMutexMapUpdate);
@@ -542,7 +542,7 @@ void LoopClosing::CorrectLoop()
             }
         }
 
-    }
+    //} // MapUpdate mutex
 
     // Project MapPoints observed in the neighborhood of the loop keyframe
     // into the current keyframe and neighbors using corrected poses.
@@ -551,7 +551,7 @@ void LoopClosing::CorrectLoop()
 
 
     // After the MapPoint fusion, new links in the covisibility graph will appear attaching both sides of the loop
-    map<KeyFrame*, set<KeyFrame*> > LoopConnections;
+    //map<KeyFrame*, set<KeyFrame*> > LoopConnections;
 
     for(vector<KeyFrame*>::iterator vit=mvpCurrentConnectedKFs.begin(), vend=mvpCurrentConnectedKFs.end(); vit!=vend; vit++)
     {
@@ -571,9 +571,15 @@ void LoopClosing::CorrectLoop()
         }
     }
 
+    
+    
     // Optimize graph
+    cout << "Optimizing essential Graph" << endl;
+    
     Optimizer::OptimizeEssentialGraph(mpMap, mpMatchedKF, mpCurrentKF, NonCorrectedSim3, CorrectedSim3, LoopConnections, mbFixScale);
 
+    } // MapUpdate mutex
+    
     mpMap->InformNewBigChange();
 
     // Add loop edge
@@ -610,7 +616,7 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)
 
         // Get Map Mutex and replace map points
         {
-            lock_guard<mutex> lock(mpMap->mMutexMapUpdate);
+	  //lock_guard<mutex> lock(mpMap->mMutexMapUpdate);
             const int nLP = mvpLoopMapPoints.size();
             for(int i=0; i<nLP;i++)
             {
