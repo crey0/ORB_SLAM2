@@ -417,18 +417,7 @@ void LoopClosing::CorrectLoop()
 
     // If a Global Bundle Adjustment is running, abort it
     // and increment mnFullBAIdx
-    {
-        lock_guard<mutex> lock(mMutexGBA);
-        if(mpThreadGBA)
-        {
-            mbStopGBA = true;
-
-            mnFullBAIdx++;
-            mpThreadGBA->detach();
-            delete mpThreadGBA;
-            mpThreadGBA = nullptr;
-        }
-    }
+    StopGlobalBundleAdjustment();
 
     // Wait until Local Mapping has effectively stopped
     while(!mpLocalMapper->isStopped())
@@ -586,18 +575,15 @@ void LoopClosing::CorrectLoop()
     mpMatchedKF->AddLoopEdge(mpCurrentKF);
     mpCurrentKF->AddLoopEdge(mpMatchedKF);
 
+    //update Loop KF id
+    mLastLoopKFid = mpCurrentKF->mnId;   
+
     // Launch a new thread to perform Global Bundle Adjustment
-    {
-        lock_guard<mutex> lock(mMutexGBA);
-        mbRunningGBA = true;
-        mbFinishedGBA = false;
-        mbStopGBA = false;
-        mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->mnId);
-    }
+    StartGlobalBundleAdjustment();
+    
     // Loop closed. Release Local Mapping.
     mpLocalMapper->RequestRelease();
 
-    mLastLoopKFid = mpCurrentKF->mnId;   
 }
 
 void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)
@@ -627,6 +613,34 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)
                 }
             }
         }
+    }
+}
+
+void LoopClosing::StartGlobalBundleAdjustment()
+{
+    // Launch a new thread to perform Global Bundle Adjustment
+    lock_guard<mutex> lock(mMutexGBA);
+
+    if(mpThreadGBA) return;
+    
+    mbRunningGBA = true;
+    mbFinishedGBA = false;
+    mbStopGBA = false;
+    mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment,this,mLastLoopKFid);
+}
+
+void LoopClosing::StopGlobalBundleAdjustment()
+{
+    lock_guard<mutex> lock(mMutexGBA);
+    
+    if(mpThreadGBA)
+    {
+        mbStopGBA = true;
+        
+	mnFullBAIdx++;
+	mpThreadGBA->detach();
+	delete mpThreadGBA;
+	mpThreadGBA = nullptr;
     }
 }
 

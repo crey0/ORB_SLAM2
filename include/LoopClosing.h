@@ -68,9 +68,8 @@ public:
 
     bool isFinished();
 
-
-    // This function will run in a separate thread
-    void RunGlobalBundleAdjustment(unsigned long nLoopKF);
+    void StartGlobalBundleAdjustment();
+    void StopGlobalBundleAdjustment();
 
     bool isRunningGBA(){
         lock_guard<std::mutex> lock(mMutexGBA);
@@ -85,12 +84,15 @@ public:
 
 private:
 
+
     enum class LoopClosingState
     {
         RUNNING,
         FINISHED,
     };
 
+    // This function will run in a separate thread
+    void RunGlobalBundleAdjustment(unsigned long nLoopKF);
 
     bool DetectLoop();
 
