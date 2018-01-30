@@ -567,16 +567,16 @@ void LoopClosing::CorrectLoop()
     
     Optimizer::OptimizeEssentialGraph(mpMap, mpMatchedKF, mpCurrentKF, NonCorrectedSim3, CorrectedSim3, LoopConnections, mbFixScale);
 
-    } // MapUpdate mutex
-    
-    mpMap->InformNewBigChange();
-
     // Add loop edge
     mpMatchedKF->AddLoopEdge(mpCurrentKF);
     mpCurrentKF->AddLoopEdge(mpMatchedKF);
 
     //update Loop KF id
     mLastLoopKFid = mpCurrentKF->mnId;   
+
+    } // MapUpdate mutex
+    
+    mpMap->InformNewBigChange();
 
     // Launch a new thread to perform Global Bundle Adjustment
     StartGlobalBundleAdjustment();

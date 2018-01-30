@@ -256,6 +256,14 @@ Map* System::GetMap()
     return mpMap;
 }
 
+
+void System::StartGlobalBundleAdjustment()
+{
+    // Get Map Mutex
+    lock_guard<mutex> lock(mpMap->mMutexMapUpdate);
+    mpLoopCloser->StartGlobalBundleAdjustment();
+}
+  
 void System::AskReset()
 {
     unique_lock<mutex> lock(mMutexReset);

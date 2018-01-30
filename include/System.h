@@ -88,6 +88,9 @@ public:
 
     Map* GetMap();
 
+    //Start GBA if one is not running
+    void StartGlobalBundleAdjustment();
+
     // Reset the system (clear map)
     void AskReset();
     void Reset();
