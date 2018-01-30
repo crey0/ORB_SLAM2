@@ -618,6 +618,13 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)
 
 void LoopClosing::StartGlobalBundleAdjustment()
 {
+    //Get the current KF id
+    long unsigned int kfId;
+    {
+        lock_guard<mutex> lock(mMutexLoopQueue);
+        kfId = mpCurrentKF->mnId;
+    }
+    
     // Launch a new thread to perform Global Bundle Adjustment
     lock_guard<mutex> lock(mMutexGBA);
 
@@ -626,7 +633,7 @@ void LoopClosing::StartGlobalBundleAdjustment()
     mbRunningGBA = true;
     mbFinishedGBA = false;
     mbStopGBA = false;
-    mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment,this,mLastLoopKFid);
+    mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment,this,kfId);
 }
 
 void LoopClosing::StopGlobalBundleAdjustment()

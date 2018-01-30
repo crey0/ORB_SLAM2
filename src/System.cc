@@ -260,7 +260,8 @@ Map* System::GetMap()
 void System::StartGlobalBundleAdjustment()
 {
     // Get Map Mutex
-    lock_guard<mutex> lock(mpMap->mMutexMapUpdate);
+    if(mpLoopCloser->isRunningGBA()) return;    
+    mpLoopCloser->StopGlobalBundleAdjustment();
     mpLoopCloser->StartGlobalBundleAdjustment();
 }
   

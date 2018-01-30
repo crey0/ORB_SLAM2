@@ -143,7 +143,7 @@ void Viewer::Run()
 	if(menuStartGBA)
 	{
 	  mpSystem->StartGlobalBundleAdjustment();
-	  menuReset = false;
+	  menuStartGBA = false;
 	}
 	
         if(menuReset)
