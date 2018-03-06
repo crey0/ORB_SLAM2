@@ -264,6 +264,11 @@ void System::StartGlobalBundleAdjustment()
     mpLoopCloser->StopGlobalBundleAdjustment();
     mpLoopCloser->StartGlobalBundleAdjustment();
 }
+
+bool System::isIdle()
+{
+  return mpLocalMapper->isIdle() && mpLoopCloser->isIdle() && !mpLoopCloser->isRunningGBA();
+}
   
 void System::AskReset()
 {

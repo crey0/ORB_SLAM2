@@ -762,7 +762,8 @@ bool LocalMapping::isRunning()
 
 bool LocalMapping::isIdle()
 {
-    return mbIdle.load();
+   lock_guard<mutex> lock(mMutexNewKFs);
+   return mlNewKeyFrames.empty() && mbIdle.load();
 }
 
 bool LocalMapping::isStopRequested()

@@ -91,6 +91,9 @@ public:
     //Start GBA if one is not running
     void StartGlobalBundleAdjustment();
 
+    //Is the system idle (tracking not accounted)?
+    bool isIdle();
+  
     // Reset the system (clear map)
     void AskReset();
     void Reset();

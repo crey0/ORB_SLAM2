@@ -36,10 +36,10 @@ namespace ORB_SLAM2
 {
 
 LoopClosing::LoopClosing(Map *pMap, KeyFrameDatabase *pDB, ORBVocabulary *pVoc, const bool bFixScale):
-    mbFinishRequested(false), mbResetRequested(false),  mState(LoopClosingState::RUNNING), mpMap(pMap),
-    mpKeyFrameDB(pDB), mpORBVocabulary(pVoc), mpMatchedKF(nullptr), mLastLoopKFid(0),
-    mbRunningGBA(false),mbFinishedGBA(true), mbStopGBA(false), mpThreadGBA(nullptr),
-    mbFixScale(bFixScale), mnFullBAIdx(0)
+  mbFinishRequested(false), mbResetRequested(false),  mbIdle(false), mState(LoopClosingState::RUNNING),
+  mpMap(pMap), mpKeyFrameDB(pDB), mpORBVocabulary(pVoc), mpMatchedKF(nullptr), mLastLoopKFid(0),
+  mbRunningGBA(false),mbFinishedGBA(true), mbStopGBA(false), mpThreadGBA(nullptr),
+  mbFixScale(bFixScale), mnFullBAIdx(0)
 {
     mnCovisibilityConsistencyTh = 3;
 }
@@ -84,6 +84,7 @@ bool LoopClosing::GetNewKeyFrame()
         auto state = UpdateState();
         bool wakeup = (state == LoopClosingState::RUNNING && !mlpLoopKeyFrameQueue.empty())
                     || state == LoopClosingState::FINISHED;
+	mbIdle.store(!wakeup);
         return wakeup;
     });
 
@@ -823,6 +824,12 @@ void LoopClosing::ResetIfRequested()
 bool LoopClosing::isFinished()
 {
     return mState.load() == LoopClosingState::FINISHED;
+}
+
+bool LoopClosing::isIdle()
+{
+    lock_guard<mutex> lock(mMutexLoopQueue);
+    return mlpLoopKeyFrameQueue.empty() && mbIdle.load();
 }
 
 

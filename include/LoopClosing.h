@@ -67,6 +67,7 @@ public:
     void RequestReset();
 
     bool isFinished();
+    bool isIdle();
 
     void StartGlobalBundleAdjustment();
     void StopGlobalBundleAdjustment();
@@ -111,6 +112,7 @@ private:
 
     bool mbFinishRequested;
     std::atomic_bool mbResetRequested;
+    std::atomic_bool mbIdle;
     std::atomic<LoopClosingState> mState;
     std::mutex mMutexLoopQueue;
     std::condition_variable mCvMutexLoopQueue;
