@@ -39,16 +39,23 @@ endif()
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(G2O REQUIRED)
-
 set(G2O_LIBS
-  ${G2O_CORE_LIBRARY}
-  ${G2O_TYPES_SBA}
-  ${G2O_TYPES_SIM3}
-)
+  optimized ${G2O_CORE_LIBRARY} debug ${G2O_CORE_LIBRARY_DEBUG}
+  optimized ${G2O_TYPES_SBA} debug ${G2O_TYPES_SBA_DEBUG}
+  optimized ${G2O_TYPES_SIM3} debug ${G2O_TYPES_SIM3_DEBUG}
+  optimized ${G2O_SOLVER_EIGEN} debug ${G2O_SOLVER_EIGEN_DEBUG}
+  )
+find_library(DBoW2_LIB NAMES ORB_SLAM2_DBoW2 PATHS ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib)
+find_path(DBoW2_INCLUDE_DIR NAMES DBoW2/BowVector.h
+  PATHS ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2
+  PATH_SUFFIXES ORB_SLAM2)
+if(NOT DBoW2_LIB OR NOT DBoW2_INCLUDE_DIR)
+  message(FATAL_ERROR "DBoW2 library not found.")
+endif(NOT DBoW2_LIB OR NOT DBoW2_INCLUDE_DIR)
 
 include_directories(
-${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
+${DBoW2_INCLUDE_DIR}
 ${EIGEN3_INCLUDE_DIR}
 ${G2O_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
@@ -77,50 +84,63 @@ src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
 )
-
+  
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${G2O_LIBS}
 ${Pangolin_LIBRARIES}
-${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-#${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+${DBoW2_LIB}
 )
 
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  )
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ORB_SLAM2
+  USE_SOURCE_PERMISSIONS
+  FILES_MATCHING PATTERN "*.h"
+  )
+
 # Build tools
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/tools)
-add_executable(bin_vocabulary
-tools/bin_vocabulary.cc)
-target_link_libraries(bin_vocabulary ${PROJECT_NAME})
+set(BUILD_TOOLS ON CACHE BOOL "Enable building tools")
+if(BUILD_TOOLS)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/tools)
+  add_executable(bin_vocabulary
+    tools/bin_vocabulary.cc)
+  target_link_libraries(bin_vocabulary ${PROJECT_NAME})
+endif(BUILD_TOOLS)
 
 # Build examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+set(BUILD_EXAMPLES OFF CACHE BOOL "Enable building examples")
+if(BUILD_EXAMPLES)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
 
-add_executable(rgbd_tum
-Examples/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum ${PROJECT_NAME})
+  add_executable(rgbd_tum
+    Examples/RGB-D/rgbd_tum.cc)
+  target_link_libraries(rgbd_tum ${PROJECT_NAME})
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
 
-add_executable(stereo_kitti
-Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti ${PROJECT_NAME})
+  add_executable(stereo_kitti
+    Examples/Stereo/stereo_kitti.cc)
+  target_link_libraries(stereo_kitti ${PROJECT_NAME})
 
-add_executable(stereo_euroc
-Examples/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc ${PROJECT_NAME})
+  add_executable(stereo_euroc
+    Examples/Stereo/stereo_euroc.cc)
+  target_link_libraries(stereo_euroc ${PROJECT_NAME})
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
 
-add_executable(mono_tum
-Examples/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum ${PROJECT_NAME})
+  add_executable(mono_tum
+    Examples/Monocular/mono_tum.cc)
+  target_link_libraries(mono_tum ${PROJECT_NAME})
 
-add_executable(mono_kitti
-Examples/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti ${PROJECT_NAME})
+  add_executable(mono_kitti
+    Examples/Monocular/mono_kitti.cc)
+  target_link_libraries(mono_kitti ${PROJECT_NAME})
 
-add_executable(mono_euroc
-Examples/Monocular/mono_euroc.cc)
-target_link_libraries(mono_euroc ${PROJECT_NAME})
+  add_executable(mono_euroc
+    Examples/Monocular/mono_euroc.cc)
+  target_link_libraries(mono_euroc ${PROJECT_NAME})
+endif(BUILD_EXAMPLES)
