@@ -94,7 +94,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
         vPoint->setEstimate(Converter::toVector3d(pMP->GetWorldPos()));
         const int id = pMP->mnId+maxKFid+1;
         vPoint->setId(id);
-        vPoint->setMarginalized(true);
+        vPoint->setMarginalized(true);//TODO true
         optimizer.addVertex(vPoint);
 
        const map<KeyFrame*,size_t> observations = pMP->GetObservations();
@@ -188,6 +188,9 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
     // Recover optimized data
 
+    // std::vector<g2o::OptimizableGraph::Vertex*> vertices;
+    // vertices.reserve(vpKFs.size() + vpMP.size());
+    
     //Keyframes
     for(size_t i=0; i<vpKFs.size(); i++)
     {
@@ -206,6 +209,8 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
             Converter::toCvMat(SE3quat).copyTo(pKF->mTcwGBA);
             pKF->mnBAGlobalForKF = nLoopKF;
         }
+	// if(!vSE3->fixed())
+	//   vertices.push_back(static_cast<g2o::OptimizableGraph::Vertex*>(vSE3));
     }
 
     //Points
@@ -231,7 +236,18 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
             Converter::toCvMat(vPoint->estimate()).copyTo(pMP->mPosGBA);
             pMP->mnBAGlobalForKF = nLoopKF;
         }
+	//DISABLED: Points are marginalized during optimization !!!
+	//if(!vPoint->fixed())
+	//  vertices.push_back(static_cast<g2o::OptimizableGraph::Vertex*>(vPoint));
     }
+
+    //Recover covariance matrix
+    // g2o::SparseBlockMatrix<g2o::MatrixX> spinv; 
+    // if(!optimizer.computeMarginals(spinv, vertices))
+    // {
+    //   std::cout << "WARNING: Algo or Solver does not support computing marginals ! \n";
+    // }
+    // spinv.writeOctave("gba_marginals_matrixs.octave");
 
 }
 
