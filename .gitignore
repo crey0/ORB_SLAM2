@@ -22,3 +22,6 @@ build*/**
 *~
 lib/
 tools/bin_vocabulary
+.*/**
+**/.*
+compile_commands.json
