@@ -56,6 +56,9 @@ public:
         RGBD=2
     };
 
+  enum class HookType{
+		NewKF=0
+  };
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
@@ -131,6 +134,9 @@ public:
     std::vector<MapPoint*> GetTrackedMapPoints();
     std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
 
+  template<HookType H, typename T>
+  void AddHook(T hook);
+
 private:
     void CheckState();
     void UpdateTrackingState(const cv::Mat& Tcw);
@@ -187,6 +193,9 @@ private:
     std::vector<cv::KeyPoint> mTrackedKeyPointsUn;
     std::mutex mMutexState;
 };
+
+template<>
+void System::AddHook<System::HookType::NewKF>(std::function<void(long unsigned int)> hook);
 
 }// namespace ORB_SLAM
 

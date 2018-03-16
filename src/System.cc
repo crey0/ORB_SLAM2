@@ -505,4 +505,10 @@ vector<cv::KeyPoint> System::GetTrackedKeyPointsUn()
     return mTrackedKeyPointsUn;
 }
 
+template<>
+void System::AddHook<System::HookType::NewKF>(std::function<void(long unsigned int)> hook)
+{
+  mpLocalMapper->AddHookNewKeyFrame(hook);
+}
+
 } //namespace ORB_SLAM

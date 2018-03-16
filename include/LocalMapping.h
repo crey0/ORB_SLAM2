@@ -72,6 +72,11 @@ public:
         return mlNewKeyFrames.size();
     }
 
+  void AddHookNewKeyFrame(std::function<void(long unsigned int)> hook){
+        lock_guard<mutex> lock(mMutexNewKFs);
+        mlNewKFHooks.push_back(hook);
+   }
+
 private:
     enum class LocalMappingState
     {
@@ -122,7 +127,7 @@ private:
 
     std::list<MapPoint*> mlpRecentAddedMapPoints;
 
-
+    std::list<std::function<void(long unsigned int)>> mlNewKFHooks;
 
 };
 

@@ -82,6 +82,7 @@ void LocalMapping::Run()
             cout << "LocalMapping: Skipping local BA and KF culling \n";
         }
 
+	for(auto f: mlNewKFHooks) f(mpCurrentKeyFrame->mnId);
         mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
     }
 }
