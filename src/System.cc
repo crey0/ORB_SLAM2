@@ -256,6 +256,11 @@ Map* System::GetMap()
     return mpMap;
 }
 
+ORBVocabulary* System::GetVocabulary()
+{
+    return mpVocabulary;
+}
+
 
 void System::StartGlobalBundleAdjustment()
 {

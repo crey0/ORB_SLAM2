@@ -91,6 +91,8 @@ public:
 
     Map* GetMap();
 
+    ORBVocabulary* GetVocabulary();
+  
     //Start GBA if one is not running
     void StartGlobalBundleAdjustment();
 
@@ -133,6 +135,7 @@ public:
     int GetTrackingState();
     std::vector<MapPoint*> GetTrackedMapPoints();
     std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
+
 
   template<HookType H, typename T>
   void AddHook(T hook);
