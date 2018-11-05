@@ -663,6 +663,15 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
     // Local Mapping was active during BA, that means that there might be new keyframes
     // not included in the Global BA and they are not consistent with the updated map.
     // We need to propagate the correction through the spanning tree
+
+    cout << "Global Bundle Adjustment finished" << endl;	    
+    // Wait until Local Mapping has effectively stopped
+    mpLocalMapper->RequestStop();
+    while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
+    {
+	usleep(1000);
+    }
+    
     {
         lock_guard<mutex> lock(mMutexGBA);
         if(idx!=mnFullBAIdx)
@@ -672,18 +681,11 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
         {
             mbFinishedGBA = false;
             mbRunningGBA = false;
+	    mpLocalMapper->RequestRelease();	    
             return;
         }
 
-        cout << "Global Bundle Adjustment finished" << endl;
-        cout << "Updating map ..." << endl;
-        mpLocalMapper->RequestStop();
-        // Wait until Local Mapping has effectively stopped
-
-        while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
-        {
-            usleep(1000);
-        }
+        cout << "Updating map ..." << endl;        
 
         // Get Map Mutex and update map
         {
